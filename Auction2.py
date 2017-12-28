@@ -111,11 +111,11 @@ def hello_world():
     db.create_all() # create the tables
 
     add_user() # add the created users to the DB
-    print('')
+    print('********Auction Session********')
     user_auction()
-    print('')
+    print('********Bid Session********')
     user_bid()
-    print('')
+    print('*******Querry Session*********')
     #query item ID
     query(1)
     query(10)
@@ -137,23 +137,23 @@ def user_auction():
 
 def user_bid():
     """itemID, bidPrice"""
+    print('Bid on item 1')
     u2.bid(1, 400)
     u3.bid(1, 200)
     u3.bid(1, 1000)
 
-    print('')
-
+    print('Bid on item 10')
     u1.bid(10, 2100)
     u3.bid(10, 3000)
     u1.bid(10, 2500)
 
-    print('')
-
+    print('Bid on item 3')
     u2.bid(3, 5500)
     u3.bid(3, 5600)
     u2.bid(3, 7000)
 
 def query(item_id):
+    item_name = Item.query.get(item_id).name # get by primary key
     query_result = Bid.query.filter_by(item_id = item_id).all()
     max = 0;
     for bid in query_result:
@@ -161,7 +161,9 @@ def query(item_id):
             max = bid.price
             name = User.query.get(bid.user_id).username # get by primary key
 
-    print(name, " has the highest bid of ", max)
+    print(name,
+          " has the highest bid of ", max,
+          " on item ", item_name)
 
 if __name__ == '__main__':
     app.run(debug = True)

@@ -1,13 +1,14 @@
 import datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import and_, Column, Integer, String, ForeignKey, DateTime, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float
 
 
 app = Flask(__name__)
 app.config.from_pyfile('config.cfg')
 
 db = SQLAlchemy(app)
+
 
 class Item(db.Model):
     __tablename__ = 'item'
@@ -30,6 +31,7 @@ class Item(db.Model):
         print("Create item ", name,
               " ID: ", id)
 
+
 class User(db.Model):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
@@ -47,37 +49,37 @@ class User(db.Model):
               " ID: ", id)
 
     def auction(self, item_id, item_name, item_des, item_time, price ):
-        "Auction action"
+        """Auction action"""
         item = Item.query.filter_by(id = item_id).first()
-        if item is None: # check item existence
+        if item is None: # check item ID duplication
             item = Item(item_id, item_name, item_des, item_time, price, self.id) # create item in DB
             db.session.add(item)
             db.session.commit()
             print("User ", self.username,
-              " place item ", item_name,
-              " on auction for ", price)
+                  " place item ", item_name,
+                  " on auction for ", price)
         else:
-            print("Item has existed.")
-
-
+            print("Item ID has existed.")
 
     def bid(self, item_id, price):
-        "Bid action"
+        """Bid action"""
         bid = Bid.query.filter_by(item_id = item_id).filter_by(user_id = self.id).first() #select the corresponding row entry, select composite Pkey with 'and_'
         aucprice = Item.query.get(item_id).price
         if price >= aucprice: # bid price must be higher than auction price
             if bid is None: # user has NOT bidded on the item
                 bid = Bid(self.id, item_id, price) # create bid session in DB
                 db.session.add(bid)
+                db.session.commit()
                 print("User ", self.username,
                       " successfully bids ", price,
                       " on the ", Item.query.filter_by(id = item_id).first().name)
             else: # user has bidded on the item
                 bid.price = price # update the existing price
+                db.session.commit()
                 print("User ", self.username,
                       " sucessfully bids again ", price,
                       " on the ", Item.query.filter_by(id = item_id).first().name)
-            db.session.commit()
+
         else:
             print(self.username,
                   "must bid higher than ", aucprice,
@@ -101,14 +103,15 @@ u3 = User(6, 'USERNAME6', 'PASS6')
 @app.route('/')
 def hello_world():
 
-    db.create_all()
+    db.create_all() # create the tables
 
-    add_user()
+    add_user() # add the created users to the DB
 
     user_auction()
 
     user_bid()
 
+    #query item ID
     query(1)
     query(10)
     query(3)
@@ -122,11 +125,13 @@ def add_user():
     db.session.commit()
 
 def user_auction():
+    """itemID, itemName, itemDes, aucTime, aucPrice"""
     u1.auction(1, 'baseball', 'an ordinary baseball', datetime.datetime.utcnow(), 300)
-    u2.auction(10, 'teeth', 'his whole teeth', datetime.datetime.utcnow(), 2000)
+    u2.auction(10, 'teeth', '32 teeth', datetime.datetime.utcnow(), 2000)
     u1.auction(3, 'LCD', '40 inch LCD', datetime.datetime.utcnow(), 5000)
 
 def user_bid():
+    """itemID, bidPrice"""
     u2.bid(1, 400)
     u3.bid(1, 200)
     u3.bid(1, 1000)

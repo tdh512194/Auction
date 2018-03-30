@@ -1,7 +1,7 @@
 import datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, func
 
 
 app = Flask(__name__)
@@ -154,15 +154,16 @@ def user_bid():
 
 def query(item_id):
     item_name = Item.query.get(item_id).name # get by primary key
-    query_result = Bid.query.filter_by(item_id = item_id).all()
-    max = 0;
-    for bid in query_result:
-        if bid.price >= max:
-            max = bid.price
-            name = User.query.get(bid.user_id).username # get by primary key
+    price = db.session.query(func.max(Bid.price)).filter_by(item_id = item_id).first()
+    name = User.query.get(Bid.query.filter_by(item_id = item_id).filter_by(price = price).first().user_id).username
+    # max = 0;
+    # for bid in query_result:
+    #     if bid.price >= max:
+    #         max = bid.price
+    #         name = User.query.get(bid.user_id).username # get by primary key
 
     print(name,
-          " has the highest bid of ", max,
+          " has the highest bid of ", price,
           " on item ", item_name)
 
 if __name__ == '__main__':
